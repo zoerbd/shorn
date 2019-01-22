@@ -1,2 +1,8 @@
 # shorn
 My personal tool for building and deploying projects
+
+# Installation 
+	./setup.py sdist
+	tar xvf dist/shorn0.3.1.tar.gz
+	./shorn0.3.1/build/setup.py install
+	
