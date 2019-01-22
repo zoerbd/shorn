@@ -63,10 +63,11 @@ class management:
 				print('Error occured: {}'.format(err))
 
 	def restore_last(self):
-		print('Not working reliable....\nExiting.')
-		sys.exit()
 		try:
-			if not 'error' in subprocess.check_output('git checkout {} .'.format([entry for entry in subprocess.check_output('git log | cut -d " " -f 2 | grep -v "zoerbd"', shell = True).decode('utf-8').split('\n') if entry][1]), shell = True):
+			if not 'error' in subprocess.check_output('git checkout {} .'.format(\
+			[entry for entry in subprocess.check_output(\
+			'git log | cut -d " " -f 2 | grep -v "zoerbd"', shell = True)\
+			.decode('utf-8').split('\n') if entry][1]), shell = True):
 				return
 		except:
 			pass
