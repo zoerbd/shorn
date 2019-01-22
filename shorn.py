@@ -66,7 +66,7 @@ class management:
 		print('Not working reliable....\nExiting.')
 		sys.exit()
 		try:
-			if not 'error: could not revert 57d2ed5... shorn commit' in subprocess.check_output('git revert {}'.format([entry for entry in subprocess.check_output('git log | cut -d " " -f 2 | grep -v "zoerbd"', shell = True).decode('utf-8').split('\n') if entry][1]), shell = True):
+			if not 'error' in subprocess.check_output('git checkout {} .'.format([entry for entry in subprocess.check_output('git log | cut -d " " -f 2 | grep -v "zoerbd"', shell = True).decode('utf-8').split('\n') if entry][1]), shell = True):
 				return
 		except:
 			pass
