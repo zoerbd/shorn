@@ -76,7 +76,7 @@ class management:
 			os.system('rm *.orig')
 			os.system('git clean -f')
 		except Exception as err:
-			print('Caught that exception for you while trying to resolve merge-conflict: '.format(err))	
+			print('Caught that exception for you while trying to resolve merge-conflict: {}'.format(err))	
 		self.commit()	
 	
 	def backup(self):
