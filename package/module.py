@@ -114,6 +114,10 @@ class management:
 		eval('self.' + self.args[parameter])
 	
 	def pack(self):
+		if subprocess.check_output('whoami', shell=True).decode('utf-8').replace('\n', '').replace(
+' ', '') != 'root':
+			print('Execute pack as root!\nExiting!')
+			sys.exit()
 		dir_name = subprocess.check_output('pwd', shell = True).decode('utf-8')#.split('/')[-1]
 		dir_name = dir_name.split('/')[-1].replace('\n', '')
 		os.system('sudo rm -rf /package')
