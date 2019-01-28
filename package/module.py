@@ -64,16 +64,30 @@ class management:
 
 	def restore_last(self):
 		try:
-			print(subprocess.check_output('git log', shell=True)[0])
-			sys.exit()
+			gitLogOutput = subprocess.check_output('git log ', shell=True).decode('utf-8').split('\n')
+			gitLogOutput = [item.replace('commit', '').replace('Date', '').replace(':', '')
+							for item in gitLogOutput
+							 if 'Date' in item or 'commit' in item]
+			commitHashes =  [item.replace(' ', '')
+							for j, item in enumerate(gitLogOutput) 
+							if j % 2 == 0]
+			commits = [[item for item in gitLogOutput 
+						if item.replace(' ', '') not in commitHashes], 
+						commitHashes]
+			for j, commit in enumerate(commits[0]):
+				if input('Restore commit from{}?[y|n] '.format(commit)) in ['y', 'Y']:
+					subprocess.check_output('git checkout {} .'.format(commits[1][j]), shell=True)
+					return
 			#if not 'error' in subprocess.check_output('git checkout {} .'.format(
 			#[entry for entry in subprocess.check_output(
 			#'git log | cut -d " " -f 2 | grep -v "zoerbd"', shell = True)
 			#.decode('utf-8').split('\n') if entry][1]), shell = True):
-			return
-		except:
+			#return
+		except Exception as err:
+			print(err)
 			pass
 		try:
+			sys.exit()
 			os.system('git mergetool')
 			os.system('rm *.orig')
 			os.system('git clean -f')
