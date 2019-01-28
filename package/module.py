@@ -64,7 +64,7 @@ class management:
 
 	def restore_last(self):
 		try:
-			print(subprocess.check_output('git log', shell=True))
+			print(subprocess.check_output('git log', shell=True)[0])
 			sys.exit()
 			#if not 'error' in subprocess.check_output('git checkout {} .'.format(
 			#[entry for entry in subprocess.check_output(
