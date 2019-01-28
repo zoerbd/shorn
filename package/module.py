@@ -64,11 +64,13 @@ class management:
 
 	def restore_last(self):
 		try:
-			if not 'error' in subprocess.check_output('git checkout {} .'.format(
-			[entry for entry in subprocess.check_output(
-			'git log | cut -d " " -f 2 | grep -v "zoerbd"', shell = True)
-			.decode('utf-8').split('\n') if entry][1]), shell = True):
-				return
+			print(subprocess.check_output('git log', shell=True))
+			sys.exit()
+			#if not 'error' in subprocess.check_output('git checkout {} .'.format(
+			#[entry for entry in subprocess.check_output(
+			#'git log | cut -d " " -f 2 | grep -v "zoerbd"', shell = True)
+			#.decode('utf-8').split('\n') if entry][1]), shell = True):
+			return
 		except:
 			pass
 		try:
