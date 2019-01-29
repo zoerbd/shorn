@@ -28,10 +28,10 @@ class management:
 	def init(self):
 		os.system('git init')
 		if not os.path.isdir('.shorn'):
-			print('Creating .shorn directory for testing and executing.')
+			print('init: Creating .shorn directory for testing and executing.')
 			os.system('mkdir .shorn') 	# put tools for building, testing in .shorn
 		os.system('touch .shorn/exec.sh')
-		print('Created or recreated exec.sh.')
+		print('init: Created or recreated exec.sh.')
 		os.system('chmod -R 770 .shorn')
 		self.commit()				# create master-branch by first commit
 		os.system('git branch dev')
@@ -47,8 +47,7 @@ class management:
 				if not open('.shorn/exec.sh', 'r').readlines():
 					print('WARNING: .shorn/exec.sh is empty, testing is not possible.')
 				[os.system('./.shorn/' + subtool) for subtool in shorn_lst]
-			if subprocess.check_output('read -s -n 1 -p "Restore last commit? [y|n]" a && echo $a', shell = True).decode('utf-8').replace('\n', '') == 'y':
-				print('restoring last commit...')
+			if self.__ask__('Restore commit?') in ['y', 'Y']:
 				self.restore_last()
 
 	def commit(self):
@@ -58,41 +57,44 @@ class management:
 			return subprocess.check_output('echo $?', shell = True)
 		except Exception as err:
 			if 'returned non-zero exit status 1.' in str(err):
-				print('Nothing new to try or commit.')
+				print('commit: Nothing new to try or commit.')
 			else:
-				print('Error occured: {}'.format(err))
+				print('commit: Error occured: {}'.format(err))
 
 	def restore_last(self):
 		try:
 			gitLogOutput = subprocess.check_output('git log ', shell=True).decode('utf-8').split('\n')
-			gitLogOutput = [item.replace('commit', '').replace('Date', '').replace(':', '')
-							for item in gitLogOutput
-							 if 'Date' in item or 'commit' in item]
-			commitHashes =  [item.replace(' ', '')
-							for j, item in enumerate(gitLogOutput) 
-							if j % 2 == 0]
-			commits = [[item for item in gitLogOutput 
-						if item.replace(' ', '') not in commitHashes], 
-						commitHashes]
+			commitHashes =  [item.replace(' ', '').replace('commit', '')
+						for j, item in enumerate(gitLogOutput) 
+						if 'commit' in item and not 'shorn' in item]
+			# peter 
+			commits = [[item.replace('Date', '').replace(':', '') for item in gitLogOutput 
+					if item.replace(' ', '').replace('commit', '') not in commitHashes and not 'shorn' in item
+					and not 'Author' in item and item], 
+					commitHashes]
+			if len(commits[0]) != len(commits[1]):
+				print('restore: FATAL - number of dates and number of corresponding hashes is unequal\nExiting')
+				sys.exit()
 			for j, commit in enumerate(commits[0]):
-				if input('Restore commit from{}?[y|n] '.format(commit)) in ['y', 'Y']:
+				try:
+					commit = commit.split(' ')[2:-1][1:] 
+					commit[3] = commit[3][0:2] + ':' + commit[3][2:4] + ':' + commit[3][4:]
+					commit = ' '.join(commit)
+				except:
+					#print('commit var: {}\nError:{}'.format(commit, err))
+					continue	
+				if self.__ask__('Restore commit from {}?'.format(commit)) in ['y', 'Y']:
 					subprocess.check_output('git checkout {} .'.format(commits[1][j]), shell=True)
 					return
-			#if not 'error' in subprocess.check_output('git checkout {} .'.format(
-			#[entry for entry in subprocess.check_output(
-			#'git log | cut -d " " -f 2 | grep -v "zoerbd"', shell = True)
-			#.decode('utf-8').split('\n') if entry][1]), shell = True):
-			#return
 		except Exception as err:
-			print(err)
-			pass
-		try:
-			sys.exit()
-			os.system('git mergetool')
-			os.system('rm *.orig')
-			os.system('git clean -f')
-		except Exception as err:
-			print('Caught that exception for you while trying to resolve merge-conflict: {}'.format(err))	
+			print('restore: Error occurred: {}'.format(err))
+			try:
+				if self.__ask__('Want to start mergetool/cleaning?') in ['y', 'Y']:
+					os.system('git mergetool')
+					os.system('rm *.orig')
+					os.system('git clean -f')
+			except Exception as err:
+				print('restore: Caught that exception for you while trying to resolve merge-conflict: {}'.format(err))	
 		self.commit()	
 	
 	def backup(self):
@@ -116,7 +118,7 @@ class management:
 		os.system('git push origin {}'.format(current_branch))
 
 	def clean(self):
-		if subprocess.check_output('read -s -n 1 -p "Clean up .shorn, .git and .orig-files? [y|n]" a&& echo $a', shell = True).decode('utf-8').replace('\n', '') == 'y':
+		if self.__ask__('Clean up .shorn, .git and .orig-files?') in ['y', 'Y']:
 			os.system('rm -rf .shorn .git *.orig')
 
 	def parse(self, argv):
@@ -132,7 +134,7 @@ class management:
 	def pack(self):
 		if subprocess.check_output('whoami', shell=True).decode('utf-8').replace('\n', '').replace(
 ' ', '') != 'root':
-			print('Execute pack as root!\nExiting!')
+			print('pack: Execute pack as root!\nExiting!')
 			sys.exit()
 		dir_name = subprocess.check_output('pwd', shell = True).decode('utf-8')#.split('/')[-1]
 		dir_name = dir_name.split('/')[-1].replace('\n', '')
@@ -176,13 +178,16 @@ class management:
 					#//////////// --> File editing
 
 		except Exception as err:
-			print('Following error occurred while doing dreamworld specific things: {}'.format(err))
+			print('pack: Following error occurred while doing dreamworld specific things: {}'.format(err))
 
 		os.system('sudo rm -r /package/game* /package/package* /package/main.js /package/src > /dev/null 2<&1')
 		os.system('sudo zip -r -X {}.zip /package >> /dev/null'.format(dir_name))
 		os.system('sudo rm -R /package')
-		print('Paste your code into this before compiling: https://babeljs.io/repl#?babili=false&browsers=&build=&builtIns=false&spec=false&loose=false&code_lz=Q&debug=false&forceAllTransforms=false&shippedProposals=false&circleciRepo=&evaluate=false&fileSize=false&timeTravel=false&sourceType=module&lineWrap=true&presets=es2015%2Creact%2Cstage-2&prettier=false&targets=&version=6.26.0&envVersion=')
-		print('Replace window.load() as described and outcomment cordova.js-include in index.html and you are fine.')
+		print('pack: Paste your code into this before compiling: https://babeljs.io/repl#?babili=false&browsers=&build=&builtIns=false&spec=false&loose=false&code_lz=Q&debug=false&forceAllTransforms=false&shippedProposals=false&circleciRepo=&evaluate=false&fileSize=false&timeTravel=false&sourceType=module&lineWrap=true&presets=es2015%2Creact%2Cstage-2&prettier=false&targets=&version=6.26.0&envVersion=')
+		print('pack: Replace window.load() as described and outcomment cordova.js-include in index.html and you are fine.')
+
+	def __ask__(self, question):
+		return subprocess.check_output('read -s -n 1 -p "{} [y|n]\n" a && echo $a'.format(question), shell = True).decode('utf-8').replace('\n', '')
 
 
 if __name__ == '__main__':
@@ -190,6 +195,6 @@ if __name__ == '__main__':
 	if os.path.exists('.shorn/exec.sh') == True:
 		management().parse(sys.argv[1:]) 
 	else:
-		print('.shorn/exec.sh does not exist or is not accessible')
+		print('init: .shorn/exec.sh does not exist or is not accessible')
 		management().parse(sys.argv[1:])
 
