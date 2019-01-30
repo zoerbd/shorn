@@ -67,7 +67,6 @@ class management:
 			commitHashes =  [item.replace(' ', '').replace('commit', '')
 						for j, item in enumerate(gitLogOutput) 
 						if 'commit' in item and not 'shorn' in item]
-			# peter 
 			commits = [[item.replace('Date', '').replace(':', '') for item in gitLogOutput 
 					if item.replace(' ', '').replace('commit', '') not in commitHashes and not 'shorn' in item
 					and not 'Author' in item and item], 
@@ -83,11 +82,17 @@ class management:
 				except:
 					#print('commit var: {}\nError:{}'.format(commit, err))
 					continue	
-				if self.__ask__('Restore commit from {}?'.format(commit)) in ['y', 'Y']:
-					subprocess.check_output('git checkout {} .'.format(commits[1][j]), shell=True)
-					return
+				print('{}: Restore commit from {}?'.format(j+1, commit))
+				#if self.__ask__('{}: Restore commit from {}?'.format(j+1, commit)) in ['y', 'Y']:
+			num = int(input('Number to restore: '))
+			if num <= len(commits[0]):
+				restoreCommit = commits[1][num-1]
+				print('Restoring commit \'{}\''.format(restoreCommit))
+				subprocess.check_output('git checkout {} .'.format(restoreCommit), shell=True)
+				return
 		except Exception as err:
 			print('restore: Error occurred: {}'.format(err))
+			raise
 			try:
 				if self.__ask__('Want to start mergetool/cleaning?') in ['y', 'Y']:
 					os.system('git mergetool')
