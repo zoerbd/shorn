@@ -52,10 +52,17 @@ class management:
 
 	def commit(self):
 		os.system('git add -A')
+		commitMessage = 'shorn commit'
 		try:
-			subprocess.check_output('git commit -m \'shorn commit\'', shell = True)
+			if self.opt_arg:
+				commitMessage = self.opt_arg	
+		except:
+			print('Using default commit-message')
+		try:
+			subprocess.check_output('git commit -m \'{}\''.format(commitMessage), shell = True)
 			return subprocess.check_output('echo $?', shell = True)
 		except Exception as err:
+			print(err)
 			if 'returned non-zero exit status 1.' in str(err):
 				print('commit: Nothing new to try or commit.')
 			else:
@@ -64,15 +71,16 @@ class management:
 	def restore_last(self):
 		try:
 			gitLogOutput = subprocess.check_output('git log ', shell=True).decode('utf-8').split('\n')
+			commitMessages = [item for item in gitLogOutput if '    ' in item]
 			commitHashes =  [item.replace(' ', '').replace('commit', '')
 						for j, item in enumerate(gitLogOutput) 
 						if 'commit' in item and not 'shorn' in item]
 			commits = [[item.replace('Date', '').replace(':', '') for item in gitLogOutput 
 					if item.replace(' ', '').replace('commit', '') not in commitHashes and not 'shorn' in item
-					and not 'Author' in item and item], 
+					and not 'Author' in item and item and not len(item) < 28 ], 
 					commitHashes]
-			if len(commits[0]) != len(commits[1]):
-				print('restore: FATAL - number of dates and number of corresponding hashes is unequal\nExiting')
+			if len(commits[0]) != len(commits[1]) or len(commits[1]) != len(commitMessages):
+				print('restore: FATAL - number of dates and corresponding hashes and/or messages is unequal\nExiting')
 				sys.exit()
 			for j, commit in enumerate(commits[0]):
 				try:
@@ -82,9 +90,13 @@ class management:
 				except:
 					#print('commit var: {}\nError:{}'.format(commit, err))
 					continue	
-				print('{}: Restore commit from {}?'.format(j+1, commit))
+				print('{}: Restore commit{}from {}?'.format(j+1, [' \'' + commitMessages[j].strip() + '\' ' if 'shorn commit' not in commitMessages[j] else ' ' for i in range(1)][0],  commit))
 				#if self.__ask__('{}: Restore commit from {}?'.format(j+1, commit)) in ['y', 'Y']:
-			num = int(input('Number to restore: '))
+			try:
+				num = int(input('Number to restore: '))
+			except:
+				print('restore: Invalid input.\nAborting...')
+				sys.exit()
 			if num <= len(commits[0]):
 				restoreCommit = commits[1][num-1]
 				print('Restoring commit \'{}\''.format(restoreCommit))
