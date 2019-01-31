@@ -23,9 +23,47 @@ class management:
 	def help(self):
 		print('Usage: shorn [parameter]\nAvailable parameter:')
 		print(str([ keys for keys, values in self.args.items()]).replace('[', '').replace(']', ''))
+		print('Sub-options:\n  init webapp\n  commit <message>\n  pack dw\n  backup check')
 		sys.exit()
 
 	def init(self):
+		try:
+			if self.opt_arg == 'webapp':
+				print('Starting basic webapp-setup with django, mod_wsgi + apache2 and postgres (without pipenv or docker).')
+				try:
+					import django, mod_wsgi, psycopg2
+				except:
+					print('WARNING: Default packages for webapp (django, mod_wsgi, psycopg2) aren\'t available in current env.')
+					if self.__ask__('Should above packages be installed?'):
+						os.system('python3 -m pip install django mod_wsgi psycopg2')
+				try:
+					if len(self.additional_args) == 2:
+						projectName = self.additional_args[0]
+						appName = self.additional_args[1]
+					else:
+						print('init: Invalid num of arguments for building webapp-env.')
+				except:
+					print('init: Project- and app-name not given, continuing with default values.')
+				os.system('django-admin.py startproject {} .'.format(projectName))
+				os.system('django-admin.py startapp {}'.format(appName))
+				# check local installations
+				os.system('sudo ls > /dev/null') 		#get shell asking for password before starting sudo command in bg
+				if subprpocess.check_output('sudo su - postgres <<< psql && echo $?', shell=True) != 0:
+					print('init: Can\'t log into postgre-db.\nMaybe try to execute as root.\nExiting.')
+					sys.exit()
+				print('Postgresql seems to be installed and healthy.')
+				try:
+					subprpocess.check_output('httpd -V && echo $?', shell=True)
+				except:
+					try:
+						subprpocess.check_output('apache2 -V && echo $?', shell=True)
+					except:
+						print('init: Can\'t check for apache\'s runtime-parameter.\nIs it installed and running?\nExiting')
+						sys.exit()
+				print('Apache2 seems to be installed and healthy.')
+				# basic postgreDB setup
+		except:
+			print('init: Doing init with default operations.')	
 		os.system('git init')
 		if not os.path.isdir('.shorn'):
 			print('init: Creating .shorn directory for testing and executing.')
@@ -47,7 +85,7 @@ class management:
 				if not open('.shorn/exec.sh', 'r').readlines():
 					print('WARNING: .shorn/exec.sh is empty, testing is not possible.')
 				[os.system('./.shorn/' + subtool) for subtool in shorn_lst]
-			if self.__ask__('Restore commit?') in ['y', 'Y']:
+			if self.__ask__('Restore commit?'):
 				self.restore_last()
 
 	def commit(self):
@@ -91,7 +129,6 @@ class management:
 					#print('commit var: {}\nError:{}'.format(commit, err))
 					continue	
 				print('{}: Restore commit{}from {}?'.format(j+1, [' \'' + commitMessages[j].strip() + '\' ' if 'shorn commit' not in commitMessages[j] else ' ' for i in range(1)][0],  commit))
-				#if self.__ask__('{}: Restore commit from {}?'.format(j+1, commit)) in ['y', 'Y']:
 			try:
 				num = int(input('Number to restore: '))
 			except:
@@ -106,7 +143,7 @@ class management:
 			print('restore: Error occurred: {}'.format(err))
 			raise
 			try:
-				if self.__ask__('Want to start mergetool/cleaning?') in ['y', 'Y']:
+				if self.__ask__('Want to start mergetool/cleaning?'):
 					os.system('git mergetool')
 					os.system('rm *.orig')
 					os.system('git clean -f')
@@ -135,7 +172,7 @@ class management:
 		os.system('git push origin {}'.format(current_branch))
 
 	def clean(self):
-		if self.__ask__('Clean up .shorn, .git and .orig-files?') in ['y', 'Y']:
+		if self.__ask__('Clean up .shorn, .git and .orig-files?'):
 			os.system('rm -rf .shorn .git *.orig')
 
 	def parse(self, argv):
@@ -146,6 +183,7 @@ class management:
 		if parameter not in self.args: self.help()
 		if len(argv) > 1: 
 			self.opt_arg = argv[1]
+			self.additional_args = argv[2:]
 		eval('self.' + self.args[parameter])
 	
 	def pack(self):
@@ -204,14 +242,12 @@ class management:
 		print('pack: Replace window.load() as described and outcomment cordova.js-include in index.html and you are fine.')
 
 	def __ask__(self, question):
-		return subprocess.check_output('read -s -n 1 -p "{} [y|n]\n" a && echo $a'.format(question), shell = True).decode('utf-8').replace('\n', '')
+		return subprocess.check_output('read -s -n 1 -p "{} [y|n]\n" a && echo $a'.format(question), shell = True).decode('utf-8').replace('\n', '') in ['y', 'Y']
 
 
 if __name__ == '__main__':
 	# command to (build and) execute
-	if os.path.exists('.shorn/exec.sh') == True:
-		management().parse(sys.argv[1:]) 
-	else:
+	if not os.path.exists('.shorn/exec.sh'):
 		print('init: .shorn/exec.sh does not exist or is not accessible')
-		management().parse(sys.argv[1:])
+	management().parse(sys.argv[1:])
 
