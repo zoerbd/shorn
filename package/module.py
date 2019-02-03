@@ -4,7 +4,7 @@ This program optimizes my personal workflow at
 developing software and is build on top of git.
 """
 
-import sys, os, subprocess
+import sys, os, subprocess, re
 
 class management:
 	def __init__(self):
@@ -47,7 +47,7 @@ class management:
 				if not open('.shorn/exec.sh', 'r').readlines():
 					print('WARNING: .shorn/exec.sh is empty, testing is not possible.')
 				[os.system('./.shorn/' + subtool) for subtool in shorn_lst]
-			if self.__ask__('Restore commit?') in ['y', 'Y']:
+			if self.__ask__('Restore commit?'):
 				self.restore_last()
 
 	def commit(self):
@@ -71,14 +71,24 @@ class management:
 	def restore_last(self):
 		try:
 			gitLogOutput = subprocess.check_output('git log ', shell=True).decode('utf-8').split('\n')
-			commitMessages = [item.replace('\'', '') for item in gitLogOutput if '    ' in item]
-			commitHashes =  [item.replace(' ', '').replace('commit', '')
-						for j, item in enumerate(gitLogOutput) 
-						if 'commit' in item and not 'shorn' in item]
-			commits = [[item.replace('Date', '').replace(':', '') for item in gitLogOutput 
-					if item.replace(' ', '').replace('commit', '') not in commitHashes and not 'shorn' in item
-					and not 'Author' in item and item and not len(item) < 28 ], 
-					commitHashes]
+			
+			# define regex-patterns
+			regexMessages = re.compile(r'^\s+(.+\s*)*')
+			regexDates = re.compile(r'(Date:)((\s*\w*)*(:\d{2}:\d{2}\s\d*))')
+			regexHashes = re.compile(r'(commit)\s([a-z0-9]{28,30})')		# not sure about len of hashes
+	
+			commitMessages, commitHashes, commitDates = [], [], []
+			for line in gitLogOutput:
+				commitMessages.append([match.group(0).strip() for match in regexMessages.finditer(line)])
+				commitMessages = [''.join(item) for item in commitMessages if item]
+			
+				commitHashes.append([ match.group(2) for match in regexHashes.finditer(line) ])
+				commitHashes = [''.join(item) for item in commitHashes if item]
+
+				commitDates.append([ match.group(2).strip() for match in regexDates.finditer(line) ])
+				commitDates = [''.join(item) for item in commitDates if item]
+
+			commits = [commitDates, commitHashes]
 			if len(commits[0]) != len(commits[1]) or len(commits[1]) != len(commitMessages):
 				print('restore: FATAL - number of dates and corresponding hashes and/or messages is unequal\nExiting')
 				print('len(commits[0]): {}'.format(len(commits[0])))
@@ -90,15 +100,8 @@ class management:
 					print('commitMessages: {}'.format(commitMessages))
 				sys.exit()
 			for j, commit in enumerate(commits[0]):
-				try:
-					commit = commit.split(' ')[2:-1][1:] 
-					commit[3] = commit[3][0:2] + ':' + commit[3][2:4] + ':' + commit[3][4:]
-					commit = ' '.join(commit)
-				except:
-					#print('commit var: {}\nError:{}'.format(commit, err))
-					continue	
 				print('{}: Restore commit{}from {}?'.format(j+1, [' \'' + commitMessages[j].strip() + '\' ' if 'shorn commit' not in commitMessages[j] else ' ' for i in range(1)][0],  commit))
-				#if self.__ask__('{}: Restore commit from {}?'.format(j+1, commit)) in ['y', 'Y']:
+				#if self.__ask__('{}: Restore commit from {}?'.format(j+1, commit)):
 			try:
 				num = int(input('Number to restore: '))
 			except:
@@ -113,7 +116,7 @@ class management:
 			print('restore: Error occurred: {}'.format(err))
 			raise
 			try:
-				if self.__ask__('Want to start mergetool/cleaning?') in ['y', 'Y']:
+				if self.__ask__('Want to start mergetool/cleaning?'):
 					os.system('git mergetool')
 					os.system('rm *.orig')
 					os.system('git clean -f')
@@ -142,7 +145,7 @@ class management:
 		os.system('git push origin {}'.format(current_branch))
 
 	def clean(self):
-		if self.__ask__('Clean up .shorn, .git and .orig-files?') in ['y', 'Y']:
+		if self.__ask__('Clean up .shorn, .git and .orig-files?'):
 			os.system('rm -rf .shorn .git *.orig')
 
 	def parse(self, argv):
@@ -211,7 +214,7 @@ class management:
 		print('pack: Replace window.load() as described and outcomment cordova.js-include in index.html and you are fine.')
 
 	def __ask__(self, question):
-		return subprocess.check_output('read -s -n 1 -p "{} [y|n]\n" a && echo $a'.format(question), shell = True).decode('utf-8').replace('\n', '')
+		return subprocess.check_output('read -s -n 1 -p "{} [y|n]\n" a && echo $a'.format(question), shell = True).decode('utf-8').replace('\n', '') in ['y', 'Y']
 
 
 if __name__ == '__main__':
