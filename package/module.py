@@ -124,7 +124,7 @@ class management:
 				print('restore: Caught that exception for you while trying to resolve merge-conflict: {}'.format(err))	
 		self.commit()	
 
-	def pull():
+	def pull(self):
 		self.commit()
 		current_branch = self.__getCurrentBranch__()
 		if current_branch != 'master':
