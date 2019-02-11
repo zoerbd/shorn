@@ -126,7 +126,10 @@ class management:
 
 	def pull():
 		self.commit()
-		os.system('git pull origin')
+		current_branch = self.__getCurrentBranch__()
+		os.system('git pull origin {}'.format(current_branch))
+		self.commit()
+		os.system('git pull origin master')
 		self.commit()
 	
 	def backup(self):
@@ -142,13 +145,16 @@ class management:
 
 	def sync(self):
 		self.commit()
-		current_branch = subprocess.check_output('git status', shell = True).decode('utf-8').split('\n')[0].split(' ')[-1]
+		current_branch = self.__getCurrentBranch__()
 		os.system('git push origin {}'.format(current_branch))
 		os.system('git checkout master')
 		os.system('git merge {}'.format(current_branch))
 		self.commit()
 		os.system('git push origin master'.format(current_branch))
 		os.system('git checkout {}'.format(current_branch))
+
+	def __getCurrentBranch__(self):
+		return subprocess.check_output('git status', shell = True).decode('utf-8').split('\n')[0].split(' ')[-1]
 
 	def clean(self):
 		if self.__ask__('Clean up .shorn, .git and .orig-files?'):
