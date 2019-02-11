@@ -16,8 +16,8 @@ class management:
 			"sync":"sync()",
 			"clean":"clean()",
 			"pack":"pack()",
-			"backup" : "backup()"
-
+			"backup" : "backup()",
+			"pull":"pull()"
 		}
 
 	def help(self):
@@ -123,6 +123,11 @@ class management:
 			except Exception as err:
 				print('restore: Caught that exception for you while trying to resolve merge-conflict: {}'.format(err))	
 		self.commit()	
+
+	def pull():
+		self.commit()
+		os.system('git pull origin')
+		self.commit()
 	
 	def backup(self):
 		try:
@@ -138,11 +143,12 @@ class management:
 	def sync(self):
 		self.commit()
 		current_branch = subprocess.check_output('git status', shell = True).decode('utf-8').split('\n')[0].split(' ')[-1]
-		os.system('git checkout master')
-		os.system('git merge dev')
-		self.commit()
-		os.system('git checkout {}'.format(current_branch))
 		os.system('git push origin {}'.format(current_branch))
+		os.system('git checkout master')
+		os.system('git merge {}'.format(current_branch))
+		self.commit()
+		os.system('git push origin master'.format(current_branch))
+		os.system('git checkout {}'.format(current_branch))
 
 	def clean(self):
 		if self.__ask__('Clean up .shorn, .git and .orig-files?'):
