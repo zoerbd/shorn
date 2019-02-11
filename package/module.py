@@ -127,8 +127,9 @@ class management:
 	def pull():
 		self.commit()
 		current_branch = self.__getCurrentBranch__()
-		os.system('git pull origin {}'.format(current_branch))
-		self.commit()
+		if current_branch != 'master':
+			os.system('git pull origin {}'.format(current_branch))
+			self.commit()
 		os.system('git pull origin master')
 		self.commit()
 	
