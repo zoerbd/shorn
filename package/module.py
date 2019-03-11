@@ -55,7 +55,7 @@ class management:
 		commitMessage = 'shorn commit'
 		try:
 			if self.opt_arg:
-				commitMessage = 'shorn: {}'.format(self.opt_arg)
+				commitMessage = self.opt_arg
 		except:
 			print('Using default commit-message')
 		try:
