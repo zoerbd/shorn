@@ -26,19 +26,19 @@ class management:
 		sys.exit()
 
 	def init(self):
-		os.system('git init')
+		self.__shell__('git init')
 		if not os.path.isdir('.shorn'):
 			print('init: Creating .shorn directory for testing and executing.')
-			os.system('mkdir .shorn') 	# put tools for building, testing in .shorn
-		os.system('touch .shorn/exec.sh')
+			self.__shell__('mkdir .shorn') 	# put tools for building, testing in .shorn
+		self.__shell__('touch .shorn/exec.sh')
 		print('init: Created or recreated exec.sh.')
-		os.system('chmod -R 770 .shorn')
+		self.__shell__('chmod -R 770 .shorn')
 		self.commit()				# create master-branch by first commit
-		os.system('git branch dev')
-		os.system('git checkout dev')
-		os.system('git config merge.tool vimdiff')
-		os.system('git config merge.conflictstyle diff3')
-		os.system('git config mergetool.prompt false')
+		self.__shell__('git branch dev')
+		self.__shell__('git checkout dev')
+		self.__shell__('git config merge.tool vimdiff')
+		self.__shell__('git config merge.conflictstyle diff3')
+		self.__shell__('git config mergetool.prompt false')
 
 	def try_current(self):
 		if self.commit() in [b'0\n', None]:
@@ -46,13 +46,13 @@ class management:
 			if shorn_lst:
 				if not open('.shorn/exec.sh', 'r').readlines():
 					print('WARNING: .shorn/exec.sh is empty, testing is not possible.')
-				[os.system('./.shorn/' + subtool) for subtool in shorn_lst]
+				[self.__shell__('./.shorn/' + subtool) for subtool in shorn_lst]
 			if self.__ask__('Restore commit?'):
 				self.restore_last()
 
 	def commit(self):
-		os.system('git add -A')
-		commitMessage = 'shorn commit'
+		self.__shell__('git add -A')
+		commitMessage = 'minor changes'
 		try:
 			if self.opt_arg:
 				commitMessage = self.opt_arg
@@ -100,7 +100,7 @@ class management:
 					print('commitMessages: {}'.format(commitMessages))
 				sys.exit()
 			for j, commit in enumerate(commits[0]):
-				print('{}: Restore commit{}from {}?'.format(j+1, [' \'' + commitMessages[j].strip() + '\' ' if 'shorn commit' not in commitMessages[j] else ' ' for i in range(1)][0],  commit))
+				print('{}: Restore commit{}from {}?'.format(j+1, [' \'' + commitMessages[j].strip() + '\' ' if 'minor changes' not in commitMessages[j] else ' ' for i in range(1)][0],  commit))
 			try:
 				num = int(input('Number to restore: '))
 			except:
@@ -116,9 +116,9 @@ class management:
 			raise
 			try:
 				if self.__ask__('Want to start mergetool/cleaning?'):
-					os.system('git mergetool')
-					os.system('rm *.orig')
-					os.system('git clean -f')
+					self.__shell__('git mergetool')
+					self.__shell__('rm *.orig')
+					self.__shell__('git clean -f')
 			except Exception as err:
 				print('restore: Caught that exception for you while trying to resolve merge-conflict: {}'.format(err))	
 		self.commit()	
@@ -127,18 +127,18 @@ class management:
 		self.commit()
 		current_branch = self.__getCurrentBranch__()
 		if current_branch != 'master':
-			os.system('git pull origin {}'.format(current_branch))
+			self.__shell__('git pull origin {}'.format(current_branch))
 			self.commit()
-		os.system('git pull origin master')
+		self.__shell__('git pull origin master')
 		self.commit()
 	
 	def backup(self):
 		try:
 			if self.opt_arg:
 				if self.opt_arg in ['check', 'c', '1']:
-					os.system('sudo /opt/check_backup.sh')
+					self.__shell__('sudo /opt/check_backup.sh')
 		except:
-			os.system('sudo ls > /dev/null') 		#get shell asking for password before starting sudo command in bg
+			self.__shell__('sudo ls > /dev/null') 		#get shell asking for password before starting sudo command in bg
 			self.__shell__('sudo /opt/do_backup.sh')
 		self.commit()
 		self.__shell__('git push origin {}'.format(self.__shell__('git status').split('\n')[0].split(' ')[-1]))
@@ -146,19 +146,19 @@ class management:
 	def sync(self):
 		self.commit()
 		current_branch = self.__getCurrentBranch__()
-		os.system('git push origin {}'.format(current_branch))
-		os.system('git checkout master')
-		os.system('git merge {}'.format(current_branch))
+		self.__shell__('git push origin {}'.format(current_branch))
+		self.__shell__('git checkout master')
+		self.__shell__('git merge {}'.format(current_branch))
 		self.commit()
-		os.system('git push origin master'.format(current_branch))
-		os.system('git checkout {}'.format(current_branch))
+		self.__shell__('git push origin master'.format(current_branch))
+		self.__shell__('git checkout {}'.format(current_branch))
 
 	def __getCurrentBranch__(self):
 		return self.__shell__('git status').split('\n')[0].split(' ')[-1]
 
 	def clean(self):
 		if self.__ask__('Clean up .shorn, .git and .orig-files?'):
-			os.system('rm -rf .shorn .git *.orig')
+			self.__shell__('rm -rf .shorn .git *.orig')
 
 	def parse(self, argv):
 		try:
@@ -171,28 +171,42 @@ class management:
 		eval('self.' + self.args[parameter])
 	
 	def pack(self):
-		if self.__shell__('whoami').strip() != 'root':
+		if self.__shell__('whoami') != 'root':
 			print('pack: Execute pack as root!\nExiting!')
 			sys.exit()
-		dir_name = self.__shell__('pwd').strip()
+		dir_name = self.__shell__('pwd')
 		dir_name = dir_name.split('/')[-1].replace('\n', '')
-		os.system('sudo rm -rf /package')
-		os.system('sudo cp -R ../{} /package'.format(dir_name))
-		[os.system('sudo rm -rf /package/{}'.format(files)) for files in ['.git', '.shorn', '.cache', '*old*', '*.orig', '.vscode']]
+		self.__shell__('sudo rm -rf /package')
+		self.__shell__('sudo cp -R ../{} /package'.format(dir_name))
+		[self.__shell__('sudo rm -rf /package/{}'.format(files)) for files in ['.git', '.shorn', '.cache', '*old*', '*.orig', '.vscode']]
 
 	def __ask__(self, question):
-		return self.__shell__('read -s -n 1 -p "{} [y|n]\n" a && echo $a'.format(question)).strip() in ['y', 'Y']
+		return self.__shell__('read -s -n 1 -p "{} [y|n]\n" a && echo $a'.format(question)) in ['y', 'Y']
 	
 	def __shell__(self, cmd):
 		opts = {
 			'stdout': subprocess.PIPE,
-			'stderr': subprocess.PIPE
+			'stderr': subprocess.PIPE,
+			'cwd': os.getcwd()
 		}
-		ps = subprocess.Popen(cmd.split(' '), **opts)
+		splittedCmd = cmd.split(' ')
+		# make sure that commit messages are executed correctly (format message into one place in list, not white-space seperated)
+		if cmd.find('\'') != -1:
+			quotes = [n for n, val in enumerate(cmd.split(' ')) if val.find('\'') != -1]
+			newMsg = ' '.join(splittedCmd[quotes[0] : quotes[1] + 1])
+			del splittedCmd[quotes[0] : quotes[1] + 1]
+			splittedCmd.insert(quotes[0], newMsg)
+		ps = subprocess.Popen(splittedCmd, **opts)
 		stdout, stderr = ps.communicate()
 		if stderr:
-			return stderr.decode('utf-8')[:-1]
-		return stdout.decode('utf-8')[:-1]
+			err = stderr.decode('utf-8').strip()
+			print('Error occurred in __shell__:\n $ {}\n{}'.format(
+				''.join(cmd), 
+				''.join([' >> {}\n'.format(line) for line in err.split('\n')])
+				).strip()
+			)
+			return err
+		return stdout.decode('utf-8').strip()
 
 
 if __name__ == '__main__':
