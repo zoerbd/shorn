@@ -9,20 +9,39 @@ import sys, os, subprocess, re
 class management:
 	def __init__(self):
 		self.args = {
-			"init" : "init()",
-			"try" : "try_current()",
-			"commit" : "commit()",
-			"restore" : "restore_last()",
-			"sync":"sync()",
-			"clean":"clean()",
-			"pack":"pack()",
-			"backup" : "backup()",
-			"pull":"pull()"
+			"init" : [
+				"init()",
+				'Initialize a new shorn/git repository.'
+			],
+			"try" : [
+				"try_current()",
+				'Commits changes and executes test script (.shorn/exec.sh).'
+			],
+			"commit" : [
+				"commit()",
+				'Adds and commits all changes in the current branch.'
+			],
+			"restore" : [
+				"restore_last()",
+				'Lists all commits and restores the desired commit.'
+			],
+			"sync":[
+				"sync()",
+				'Commits through master and dev branch all changes and pushs to origin.'
+			],
+			"clean":[
+				"clean()",
+				'Deletes .shorn .git *.orig.'
+			],
+			"pull":[
+				"pull()",
+				'Pulls and commits all changes from origin.'
+			]
 		}
 
 	def help(self):
 		print('Usage: shorn [parameter]\nAvailable parameter:')
-		print(str([ keys for keys, values in self.args.items()]).replace('[', '').replace(']', ''))
+		print('\n'.join([ '   {}  -  {}'.format(keys, values[1]) for keys, values in self.args.items()]))
 		sys.exit()
 
 	def init(self):
@@ -132,17 +151,6 @@ class management:
 		self.__shell__('git pull origin master')
 		self.commit()
 	
-	def backup(self):
-		try:
-			if self.opt_arg:
-				if self.opt_arg in ['check', 'c', '1']:
-					self.__shell__('sudo /opt/check_backup.sh')
-		except:
-			self.__shell__('sudo ls > /dev/null') 		#get shell asking for password before starting sudo command in bg
-			self.__shell__('sudo /opt/do_backup.sh')
-		self.commit()
-		self.__shell__('git push origin {}'.format(self.__shell__('git status').split('\n')[0].split(' ')[-1]))
-
 	def sync(self):
 		self.commit()
 		current_branch = self.__getCurrentBranch__()
@@ -168,17 +176,7 @@ class management:
 		if parameter not in self.args: self.help()
 		if len(argv) > 1: 
 			self.opt_arg = argv[1]
-		eval('self.' + self.args[parameter])
-	
-	def pack(self):
-		if self.__shell__('whoami') != 'root':
-			print('pack: Execute pack as root!\nExiting!')
-			sys.exit()
-		dir_name = self.__shell__('pwd')
-		dir_name = dir_name.split('/')[-1].replace('\n', '')
-		self.__shell__('sudo rm -rf /package')
-		self.__shell__('sudo cp -R ../{} /package'.format(dir_name))
-		[self.__shell__('sudo rm -rf /package/{}'.format(files)) for files in ['.git', '.shorn', '.cache', '*old*', '*.orig', '.vscode']]
+		eval('self.' + self.args[parameter][0])
 
 	def __ask__(self, question):
 		return self.__shell__('read -s -n 1 -p "{} [y|n]\n" a && echo $a'.format(question)) in ['y', 'Y']

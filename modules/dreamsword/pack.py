@@ -1,4 +1,14 @@
-		# append at end of pack function 
+	def pack(self):
+		if self.__shell__('whoami') != 'root':
+			print('pack: Execute pack as root!\nExiting!')
+			sys.exit()
+		dir_name = self.__shell__('pwd')
+		dir_name = dir_name.split('/')[-1].replace('\n', '')
+		self.__shell__('sudo rm -rf /package')
+		self.__shell__('sudo cp -R ../{} /package'.format(dir_name))
+		[self.__shell__('sudo rm -rf /package/{}'.format(files)) for files in ['.git', '.shorn', '.cache', '*old*', '*.orig', '.vscode']]
+
+		# dreamsword specifics
 		try:
 			if self.opt_arg:
 				if self.opt_arg in ['dw', 'dreamworld', 'cocoon']:
