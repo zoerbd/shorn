@@ -59,8 +59,8 @@ class management:
 		except:
 			print('Using default commit-message')
 		try:
-			subprocess.check_output('git commit -m \'{}\''.format(commitMessage), shell = True)
-			return subprocess.check_output('echo $?', shell = True)
+			self.__shell__('git commit -m \'{}\''.format(commitMessage))
+			return self.__shell__('echo $?')
 		except Exception as err:
 			print(err)
 			if 'returned non-zero exit status 1.' in str(err):
@@ -70,7 +70,7 @@ class management:
 
 	def restore_last(self):
 		try:
-			gitLogOutput = subprocess.check_output('git log ', shell=True).decode('utf-8').split('\n')
+			gitLogOutput = self.__shell__('git log').split('\n')
 			
 			# define regex-patterns
 			regexMessages = re.compile(r'^\s+(.+\s*)*')
@@ -101,7 +101,6 @@ class management:
 				sys.exit()
 			for j, commit in enumerate(commits[0]):
 				print('{}: Restore commit{}from {}?'.format(j+1, [' \'' + commitMessages[j].strip() + '\' ' if 'shorn commit' not in commitMessages[j] else ' ' for i in range(1)][0],  commit))
-				#if self.__ask__('{}: Restore commit from {}?'.format(j+1, commit)):
 			try:
 				num = int(input('Number to restore: '))
 			except:
@@ -110,7 +109,7 @@ class management:
 			if num <= len(commits[0]):
 				restoreCommit = commits[1][num-1]
 				print('Restoring commit \'{}\''.format(restoreCommit))
-				subprocess.check_output('git checkout {} .'.format(restoreCommit), shell=True)
+				self.__shell__('git checkout {} .'.format(restoreCommit))
 				return
 		except Exception as err:
 			print('restore: Error occurred: {}'.format(err))
@@ -140,9 +139,9 @@ class management:
 					os.system('sudo /opt/check_backup.sh')
 		except:
 			os.system('sudo ls > /dev/null') 		#get shell asking for password before starting sudo command in bg
-			subprocess.Popen(['sudo', '/opt/do_backup.sh'], stdout = subprocess.PIPE)
+			self.__shell__('sudo /opt/do_backup.sh')
 		self.commit()
-		os.system('git push origin {}'.format(subprocess.check_output('git status', shell = True).decode('utf-8').split('\n')[0].split(' ')[-1]))
+		self.__shell__('git push origin {}'.format(self.__shell__('git status').split('\n')[0].split(' ')[-1]))
 
 	def sync(self):
 		self.commit()
@@ -155,7 +154,7 @@ class management:
 		os.system('git checkout {}'.format(current_branch))
 
 	def __getCurrentBranch__(self):
-		return subprocess.check_output('git status', shell = True).decode('utf-8').split('\n')[0].split(' ')[-1]
+		return self.__shell__('git status').split('\n')[0].split(' ')[-1]
 
 	def clean(self):
 		if self.__ask__('Clean up .shorn, .git and .orig-files?'):
@@ -172,62 +171,28 @@ class management:
 		eval('self.' + self.args[parameter])
 	
 	def pack(self):
-		if subprocess.check_output('whoami', shell=True).decode('utf-8').replace('\n', '').replace(
-' ', '') != 'root':
+		if self.__shell__('whoami').strip() != 'root':
 			print('pack: Execute pack as root!\nExiting!')
 			sys.exit()
-		dir_name = subprocess.check_output('pwd', shell = True).decode('utf-8')#.split('/')[-1]
+		dir_name = self.__shell__('pwd').strip()
 		dir_name = dir_name.split('/')[-1].replace('\n', '')
 		os.system('sudo rm -rf /package')
 		os.system('sudo cp -R ../{} /package'.format(dir_name))
 		[os.system('sudo rm -rf /package/{}'.format(files)) for files in ['.git', '.shorn', '.cache', '*old*', '*.orig', '.vscode']]
 
-		# some particular things for dreamworld-project
-		try:
-			if self.opt_arg:
-				if self.opt_arg in ['dw', 'dreamworld', 'cocoon']:
-					[os.system('sudo rm -rf /package/{}'.format(files)) for files in ['typings', 'node_modules', '*.graphml', 'server-side', 'cordova', 'key', 'test.py', '*.log']]
-					os.system('sudo mv /package/dist/assets/ /package/assets')
-					os.system('sudo rm -rf /package/dist')
-					os.system('sudo rm -rf /package/assets/svg /package/assets/concepts')
-
-					#//////////// --> File editing
-					items = [ 'src/' + item for item in os.listdir('src') if '.js' in item]	
-					items = items + [ 'src/scenes/' + item for item in os.listdir('src/scenes') if '.js' in item]
-					files = [open(item, 'r').readlines() for item in items]
-					wfile = open('/package/index.js', 'w')
-					for j, content in enumerate(files):
-						for i, line in enumerate(content):
-							# replace any invalid syntax for compiling
-							if 'export' in line:
-								line = line.replace('export', '')
-							elif 'import' in line or '/**' in line:
-								line = '\n'
-	
-							# warn when meet misc things
-							for invalid_substr in ['window', '=>']:
-								if invalid_substr in line:
-									print('WARNING: \'{}\' in line {} of file \'{}\'.'.format(invalid_substr, i+1, items[j]))	
-							wfile.write(line)
-					wfile.close()
-
-					index = open('/package/index.html', 'r').readlines()
-					index_new = open('/package/index.html', 'w')
-					[index_new.write('<script src=\"index.js\"></script>') if 'main.js' in item else index_new.write(item) for item in index]
-					index_new.close()
-					#//////////// --> File editing
-
-		except Exception as err:
-			print('pack: Following error occurred while doing dreamworld specific things: {}'.format(err))
-
-		os.system('sudo rm -r /package/game* /package/package* /package/main.js /package/src > /dev/null 2<&1')
-		os.system('sudo zip -r -X {}.zip /package >> /dev/null'.format(dir_name))
-		os.system('sudo rm -R /package')
-		print('pack: Paste your code into this before compiling: https://babeljs.io/repl#?babili=false&browsers=&build=&builtIns=false&spec=false&loose=false&code_lz=Q&debug=false&forceAllTransforms=false&shippedProposals=false&circleciRepo=&evaluate=false&fileSize=false&timeTravel=false&sourceType=module&lineWrap=true&presets=es2015%2Creact%2Cstage-2&prettier=false&targets=&version=6.26.0&envVersion=')
-		print('pack: Replace window.load() as described and outcomment cordova.js-include in index.html and you are fine.')
-
 	def __ask__(self, question):
-		return subprocess.check_output('read -s -n 1 -p "{} [y|n]\n" a && echo $a'.format(question), shell = True).decode('utf-8').replace('\n', '') in ['y', 'Y']
+		return self.__shell__('read -s -n 1 -p "{} [y|n]\n" a && echo $a'.format(question)).strip() in ['y', 'Y']
+	
+	def __shell__(self, cmd):
+		opts = {
+			'stdout': subprocess.PIPE,
+			'stderr': subprocess.PIPE
+		}
+		ps = subprocess.Popen(cmd.split(' '), **opts)
+		stdout, stderr = ps.communicate()
+		if stderr:
+			return stderr.decode('utf-8')[:-1]
+		return stdout.decode('utf-8')[:-1]
 
 
 if __name__ == '__main__':
