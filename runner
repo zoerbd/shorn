@@ -1,5 +1,0 @@
-if os.path.exists('.shorn/exec.sh') == True:
-	management().parse(sys.argv[1:])
-else:
-	print('.shorn/exec.sh does not exist or is not accessible')
-	management().parse(sys.argv[1:])

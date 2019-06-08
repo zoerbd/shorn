@@ -1,8 +1,15 @@
 # shorn
-My personal tool for building and deploying projects
+My personal tool for managing efficient workflows for projects in terms of developing and testing.
 
 # Installation 
-	./setup.py sdist
-	tar xvf dist/shorn0.3.1.tar.gz
-	./shorn0.3.1/build/setup.py install
-	
+	cp shorn.py /usr/bin/shorn	
+	chmod a+x /usr/bin/shorn
+
+# Update shorn
+	shorn update
+
+# Installing modules
+	shorn install <modulename>
+
+# Available modules
+coming soon!
