@@ -8,13 +8,14 @@ import sys, os, subprocess, re
 
 class management:
 	def __init__(self):
+		self.version = 0.4
 		self.args = {
 			"init" : [
 				"init()",
 				'Initialize a new shorn/git repository.'
 			],
 			"try" : [
-				"try_current()",
+				"tryCurrent()",
 				'Commits changes and executes test script (.shorn/exec.sh).'
 			],
 			"commit" : [
@@ -22,7 +23,7 @@ class management:
 				'Adds and commits all changes in the current branch.'
 			],
 			"restore" : [
-				"restore_last()",
+				"restore()",
 				'Lists all commits and restores the desired commit.'
 			],
 			"sync":[
@@ -36,6 +37,14 @@ class management:
 			"pull":[
 				"pull()",
 				'Pulls and commits all changes from origin.'
+			],
+			"version":[
+				"printVersion()",
+				'Prints the currently installed version of shorn.'
+			],
+			"update":[
+				"update()",
+				'Looks on github if a new version is commited and updates the local binary.'
 			]
 		}
 
@@ -59,7 +68,7 @@ class management:
 		self.__shell__('git config merge.conflictstyle diff3')
 		self.__shell__('git config mergetool.prompt false')
 
-	def try_current(self):
+	def tryCurrent(self):
 		if self.commit() in [b'0\n', None]:
 			shorn_lst = os.listdir('.shorn') 
 			if shorn_lst:
@@ -67,7 +76,7 @@ class management:
 					print('WARNING: .shorn/exec.sh is empty, testing is not possible.')
 				[self.__shell__('./.shorn/' + subtool) for subtool in shorn_lst]
 			if self.__ask__('Restore commit?'):
-				self.restore_last()
+				self.restore()
 
 	def commit(self):
 		self.__shell__('git add -A')
@@ -87,7 +96,7 @@ class management:
 			else:
 				print('commit: Error occured: {}'.format(err))
 
-	def restore_last(self):
+	def restore(self):
 		try:
 			gitLogOutput = self.__shell__('git log').split('\n')
 			
@@ -162,7 +171,7 @@ class management:
 		self.__shell__('git checkout {}'.format(current_branch))
 
 	def __getCurrentBranch__(self):
-		return self.__shell__('git status').split('\n')[0].split(' ')[-1]
+		return self.__shell__('git status').split('\n')[0].strip()
 
 	def clean(self):
 		if self.__ask__('Clean up .shorn, .git and .orig-files?'):
@@ -181,11 +190,11 @@ class management:
 	def __ask__(self, question):
 		return self.__shell__('read -s -n 1 -p "{} [y|n]\n" a && echo $a'.format(question)) in ['y', 'Y']
 	
-	def __shell__(self, cmd):
+	def __shell__(self, cmd, cwd=os.getcwd()):
 		opts = {
 			'stdout': subprocess.PIPE,
 			'stderr': subprocess.PIPE,
-			'cwd': os.getcwd()
+			'cwd': cwd
 		}
 		splittedCmd = cmd.split(' ')
 		# make sure that commit messages are executed correctly (format message into one place in list, not white-space seperated)
@@ -206,12 +215,37 @@ class management:
 			return err
 		return stdout.decode('utf-8').strip()
 
+	def printVersion(self):
+		print(self.version)
+	
+	def update(self):
+		print('Checking for update....')
+		if os.path.isdir('/tmp/shorn/'):
+			self.__shell__('rm -rf /tmp/shorn')
+		self.__shell__('git clone https://github.com/zoerbd/shorn', '/tmp')
+		with open('/tmp/shorn/shorn.py') as newBin:
+			for line in newBin.readlines():
+				if 'self.version' in line:
+					if self.version < int(line[line.find('='):].strip()):
+						print('Install new version...')
+						shornPath = self.__shell__('which shorn')
+						self.__shell__('sudo cp {} {}'.format('/tmp/shorn/shorn.py', shornPath))
+						self.__shell__('sudo chmod a+x {}'.format(shornPath))
+						whoami = self.__shell__('whoami')
+						self.__shell__('sudo chown {} {}'.format(whoami, shornPath))
+						print('Installed new binary!')
+					else:
+						print('Youre shorn version is up to date!')
+					break
 
 if __name__ == '__main__':
 	# command to (build and) execute
-	if os.path.exists('.shorn/exec.sh') == True:
+	if os.path.exists('.shorn/exec.sh'):
 		management().parse(sys.argv[1:]) 
 	else:
-		print('init: .shorn/exec.sh does not exist or is not accessible')
+		try:
+			if sys.argv[1] not in ['version', 'init', 'help']:
+				print('init: .shorn/exec.sh does not exist or is not accessible')
+		except IndexError:
+			sys.argv.append('help')
 		management().parse(sys.argv[1:])
-
