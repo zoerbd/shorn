@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 This program optimizes my personal workflow at 
-developing software and is build on top of git.
+developing software and is built on top of git.
 """
 
 import sys, os, subprocess, re
