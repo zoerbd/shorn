@@ -8,7 +8,7 @@ import sys, os, subprocess, re
 
 class management:
 	def __init__(self):
-		self.version = 0.4
+		self.version = 0.5
 		self.args = {
 			"init" : [
 				"init()",
@@ -205,7 +205,7 @@ class management:
 			splittedCmd.insert(quotes[0], newMsg)
 		ps = subprocess.Popen(splittedCmd, **opts)
 		stdout, stderr = ps.communicate()
-		if stderr:
+		if stderr and not b'Cloning into \'shorn\'...' in stderr:
 			err = stderr.decode('utf-8').strip()
 			print('Error occurred in __shell__:\n $ {}\n{}'.format(
 				''.join(cmd), 
@@ -219,14 +219,14 @@ class management:
 		print(self.version)
 	
 	def update(self):
-		print('Checking for update....')
+		print('Checking for update...')
 		if os.path.isdir('/tmp/shorn/'):
 			self.__shell__('rm -rf /tmp/shorn')
 		self.__shell__('git clone https://github.com/zoerbd/shorn', '/tmp')
 		with open('/tmp/shorn/shorn.py') as newBin:
 			for line in newBin.readlines():
 				if 'self.version' in line:
-					if self.version < int(line[line.find('='):].strip()):
+					if self.version < float(line[line.find('=')+1:].strip()):
 						print('Install new version...')
 						shornPath = self.__shell__('which shorn')
 						self.__shell__('sudo cp {} {}'.format('/tmp/shorn/shorn.py', shornPath))
@@ -235,7 +235,7 @@ class management:
 						self.__shell__('sudo chown {} {}'.format(whoami, shornPath))
 						print('Installed new binary!')
 					else:
-						print('Youre shorn version is up to date!')
+						print('The installed version is up to date!')
 					break
 
 if __name__ == '__main__':
@@ -244,7 +244,7 @@ if __name__ == '__main__':
 		management().parse(sys.argv[1:]) 
 	else:
 		try:
-			if sys.argv[1] not in ['version', 'init', 'help']:
+			if sys.argv[1] not in ['version', 'init', 'help', 'update']:
 				print('init: .shorn/exec.sh does not exist or is not accessible')
 		except IndexError:
 			sys.argv.append('help')
