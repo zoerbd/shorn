@@ -166,7 +166,7 @@ class management:
 		self.commit()
 		#currentBranch = self.__getCurrentBranch__()
 		print('Pulling from origin.')
-		self.__shell__('git pull --all origin')
+		self.__shell__('git pull --all')
 		#if currentBranch != 'master':
 		#	self.__shell__('git pull origin {}'.format(currentBranch))
 		#	self.commit()
