@@ -315,11 +315,14 @@ class management:
 	
 	def __executeModules__(self):
 		parent = traceback.extract_stack(None, 2)[0][2]
-		for modulePath in os.listdir(os.path.join('/usr/lib/shorn', parent)):
-			modulePath = os.path.join('/usr/lib/shorn', parent, modulePath)
-			with open(modulePath) as moduleContent:
-				print('Will proceed executing the installed {} module.'.format(os.path.basename(modulePath)))
-				[ eval(line) for line in moduleContent.readlines() ]
+		try:
+			for modulePath in os.listdir(os.path.join('/usr/lib/shorn', parent)):
+				modulePath = os.path.join('/usr/lib/shorn', parent, modulePath)
+				with open(modulePath) as moduleContent:
+					print('Will proceed executing the installed {} module.'.format(os.path.basename(modulePath)))
+					[ eval(line) for line in moduleContent.readlines() ]
+		except:
+			pass
 
 if __name__ == '__main__':
 	# command to (build and) execute
