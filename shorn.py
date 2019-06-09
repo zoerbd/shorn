@@ -175,9 +175,13 @@ class management:
 		self.__executeModules__()
 	
 	def sync(self):
+		try:
+			syncType = sys.argv[2]
+		except:
+			syncType = 'all'
 		self.commit()
 		currentBranch = self.__getCurrentBranch__()
-		if sys.argv[2] == 'all' or sys.argv[2] == '':
+		if syncType == 'all':
 			print('Merging all branches to the current state.')
 			branches = self.__shell__('git branch').strip().split('\n')
 			del branches[[i for i, val in enumerate(branches) if '*' in val][0]]	# delete branch marked with '*' (active branch)
@@ -186,9 +190,9 @@ class management:
 				self.__shell__('git merge {}'.format(currentBranch))
 			print('Pushing all branches to origin.')
 			self.__shell__('git push --all origin')
-		elif sys.argv[2] == 'dev':
+		elif syncType == 'dev':
 			pass
-		elif sys.argv[2] == 'altdev':
+		elif syncType == 'altdev':
 			pass
 		else:
 			print('Entered invalid sync method.\nUsage: shorn sync <all|dev|altdev>\n  all - commit and push all branches\n  dev - commit and push all dev branches\n  altdev - commit changes in dev branch and create forked dev branch')
