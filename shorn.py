@@ -74,6 +74,7 @@ class management:
 		self.__shell__('git config merge.tool vimdiff')
 		self.__shell__('git config merge.conflictstyle diff3')
 		self.__shell__('git config mergetool.prompt false')
+		self.__executeModules__()
 
 	def tryCurrent(self):
 		if self.commit() in [b'0\n', None]:
@@ -104,6 +105,7 @@ class management:
 				print('commit: Nothing new to try or commit.')
 			else:
 				print('commit: Error occured: {}'.format(err))
+		self.__executeModules__()
 
 	def restore(self):
 		try:
@@ -159,6 +161,7 @@ class management:
 			except Exception as err:
 				print('restore: Caught that exception for you while trying to resolve merge-conflict: {}'.format(err))	
 		self.commit()	
+		self.__executeModules__()
 
 	def pull(self):
 		self.commit()
@@ -169,6 +172,7 @@ class management:
 			self.commit()
 		self.__shell__('git pull origin master')
 		self.commit()
+		self.__executeModules__()
 	
 	def sync(self):
 		self.commit()
@@ -181,6 +185,7 @@ class management:
 		self.commit()
 		self.__shell__('git push origin master'.format(current_branch))
 		self.__shell__('git checkout {}'.format(current_branch))
+		self.__executeModules__()
 
 	def __getCurrentBranch__(self):
 		return self.__shell__('git status').split('\n')[0].strip().split(' ')[-1]
