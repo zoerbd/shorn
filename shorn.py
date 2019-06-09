@@ -175,6 +175,7 @@ class management:
 		print('Pushing to origin.')
 		self.__shell__('git push origin {}'.format(current_branch))
 		self.__shell__('git checkout master')
+		print('Merging branches.')
 		self.__shell__('git merge {}'.format(current_branch))
 		self.commit()
 		self.__shell__('git push origin master'.format(current_branch))
