@@ -210,7 +210,7 @@ class management:
 		ps = subprocess.Popen(splittedCmd, **opts)
 		stdout, stderr = ps.communicate()
 		if stderr:
-			err = manageGitErr(stderr)
+			err = self.manageGitErr(stderr)
 			if err:
 				print('Error occurred in __shell__:\n $ {}\n{}'.format(
 					''.join(cmd), 
