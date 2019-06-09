@@ -210,10 +210,10 @@ class management:
 		print(splittedCmd)
 		ps = subprocess.Popen(splittedCmd, **opts)
 		stdout, stderr = ps.communicate()
-		if stderr and not any(
+		if stderr and not any([
 			b'Cloning into \'shorn\'...' in stderr, 
 			b'Everything up-to-date' in stderr
-		):
+		]):
 			err = stderr.decode('utf-8').strip()
 			print('Error occurred in __shell__:\n $ {}\n{}'.format(
 				''.join(cmd), 
