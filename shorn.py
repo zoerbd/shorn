@@ -175,10 +175,18 @@ class management:
 		self.__executeModules__()
 	
 	def sync(self):
+		# handle syncType
 		try:
 			syncType = sys.argv[2]
 		except:
 			syncType = 'all'
+		# commit message handling with sys args
+		try:
+			self.opt_arg = sys.argv[3]
+		except:
+			if syncType not in ['all', 'dev', 'altdev']:
+				self.opt_arg = syncType
+				syncType = 'all'
 		self.commit()
 		currentBranch = self.__getCurrentBranch__()
 		if syncType == 'all':
@@ -268,7 +276,7 @@ class management:
 			b'Everything up-to-date',
 			b'Already on',
 			b'To https://github.com/zoerbd/shorn',
-			b'Switched to branch '	
+			b'Switched to branch'	
 		]
 		if not any(allowedGitErr in err for allowedGitErr in allowedGitErrors):
 			return err.decode('utf-8').strip()
