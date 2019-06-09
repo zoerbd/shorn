@@ -175,7 +175,7 @@ class management:
 		self.__shell__('git checkout {}'.format(current_branch))
 
 	def __getCurrentBranch__(self):
-		return self.__shell__('git status').split('\n')[0].strip()
+		return self.__shell__('git status').split('\n')[0].strip().split(' ')[-1]
 
 	def clean(self):
 		if self.__ask__('Clean up .shorn, .git and .orig-files?'):
@@ -210,7 +210,10 @@ class management:
 		print(splittedCmd)
 		ps = subprocess.Popen(splittedCmd, **opts)
 		stdout, stderr = ps.communicate()
-		if stderr and not b'Cloning into \'shorn\'...' in stderr:
+		if stderr and not any(
+			b'Cloning into \'shorn\'...' in stderr, 
+			b'Everything up-to-date' in stderr
+		):
 			err = stderr.decode('utf-8').strip()
 			print('Error occurred in __shell__:\n $ {}\n{}'.format(
 				''.join(cmd), 
