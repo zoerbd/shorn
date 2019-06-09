@@ -164,13 +164,14 @@ class management:
 
 	def pull(self):
 		self.commit()
-		currentBranch = self.__getCurrentBranch__()
+		#currentBranch = self.__getCurrentBranch__()
 		print('Pulling from origin.')
-		if currentBranch != 'master':
-			self.__shell__('git pull origin {}'.format(currentBranch))
-			self.commit()
-		self.__shell__('git pull origin master')
-		self.commit()
+		self.__shell__('git pull --all origin')
+		#if currentBranch != 'master':
+		#	self.__shell__('git pull origin {}'.format(currentBranch))
+		#	self.commit()
+		#self.__shell__('git pull origin master')
+		#self.commit()
 		self.__executeModules__()
 	
 	def sync(self):
