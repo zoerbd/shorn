@@ -207,12 +207,12 @@ class management:
 			newMsg = ' '.join(splittedCmd[quotes[0] : quotes[1] + 1])
 			del splittedCmd[quotes[0] : quotes[1] + 1]
 			splittedCmd.insert(quotes[0], newMsg)
-		print(splittedCmd)
 		ps = subprocess.Popen(splittedCmd, **opts)
 		stdout, stderr = ps.communicate()
 		if stderr and not any([
 			b'Cloning into \'shorn\'...' in stderr, 
-			b'Everything up-to-date' in stderr
+			b'Everything up-to-date' in stderr,
+			b'Already on' in stderr
 		]):
 			err = stderr.decode('utf-8').strip()
 			print('Error occurred in __shell__:\n $ {}\n{}'.format(
