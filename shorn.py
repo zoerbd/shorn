@@ -194,6 +194,7 @@ class management:
 			branches = self.__shell__('git branch').strip().split('\n')
 			del branches[[i for i, val in enumerate(branches) if '*' in val][0]]	# delete branch marked with '*' (active branch)
 			for branch in branches:
+				print('  Doing checkout and merge for branch {}'.format(branch))
 				self.__shell__('git checkout {}'.format(branch.strip()))
 				self.__shell__('git merge {}'.format(currentBranch))
 			print('Pushing all branches to origin.')
@@ -204,6 +205,7 @@ class management:
 			pass
 		else:
 			print('Entered invalid sync method.\nUsage: shorn sync <all|dev|altdev>\n  all - commit and push all branches\n  dev - commit and push all dev branches\n  altdev - commit changes in dev branch and create forked dev branch')
+		print('Switched back to branch dev.')
 		self.__shell__('git checkout dev')
 		self.__executeModules__()
 
