@@ -8,7 +8,7 @@ import sys, os, subprocess, re, traceback, importlib.util, datetime
 
 class management:
 	def __init__(self):
-		self.version = 1.1
+		self.version = 1.11
 		self.args = {
 			"init" : [
 				"init()",
@@ -97,13 +97,13 @@ class management:
 				commitMessage = self.opt_arg
 		except:
 			print('Using default commit-message.')
-		#try:
-		self.__shell__('git commit -m \'{}\''.format(commitMessage))
-		return self.__shell__('echo $?')
-		#except Exception as err:
-		#	print('  commit: {}'.format(err))
-		#	if 'returned non-zero exit status 1.' in str(err):
-		#		print('commit: Nothing new to try or commit.')
+		try:
+			self.__shell__('git commit -m \'{}\''.format(commitMessage))
+			return self.__shell__('echo $?')
+		except Exception as err:
+			print('  commit: {}'.format(err))
+			if 'returned non-zero exit status 1.' in str(err):
+				print('commit: Nothing new to try or commit.')
 		self.__executeModules__()
 
 	def restore(self):
@@ -291,7 +291,8 @@ class management:
 			b'Everything up-to-date',
 			b'Already on',
 			b'To https://github.com/zoerbd/shorn',
-			b'Switched to branch'	
+			b'Switched to branch',
+			b'From https://github.com/zoerbd/shorn',
 		]
 		if not any(allowedGitErr in err for allowedGitErr in allowedGitErrors):
 			return err.decode('utf-8').strip()
