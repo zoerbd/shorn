@@ -228,7 +228,8 @@ class management:
 		allowedGitErrors = [
 			b'Cloning into \'shorn\'...', 
 			b'Everything up-to-date',
-			b'Already on'
+			b'Already on',
+			b'To https://github.com/zoerbd/shorn'	
 		]
 		if not any(allowedGitErr in err for allowedGitErr in allowedGitErrors):
 			return err.decode('utf-8').strip()
