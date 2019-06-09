@@ -207,6 +207,7 @@ class management:
 			newMsg = ' '.join(splittedCmd[quotes[0] : quotes[1] + 1])
 			del splittedCmd[quotes[0] : quotes[1] + 1]
 			splittedCmd.insert(quotes[0], newMsg)
+		print(splittedCmd)
 		ps = subprocess.Popen(splittedCmd, **opts)
 		stdout, stderr = ps.communicate()
 		if stderr and not b'Cloning into \'shorn\'...' in stderr:
