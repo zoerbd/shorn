@@ -287,8 +287,8 @@ class management:
 
 		# Available methods for modules in supportedMethods, if empty -> module not found
 		if supportedMethods:
+			print('Installing module...')
 			for method in supportedMethods:
-				print('Installing module...')
 				self.__shell__('sudo mkdir -p {}'.format(os.path.join('/usr/lib/shorn', method)))
 				self.__shell__('sudo cp {} /usr/lib/shorn/{}'.format(os.path.join('/tmp/shorn/modules', method, newModule + '.py'), method))
 			return
