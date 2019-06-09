@@ -193,11 +193,11 @@ class management:
 		del branches[[i for i, val in enumerate(branches) if '*' in val][0]]	# delete branch marked with '*' (active branch)
 		if syncType == 'all':
 			print('Merging all branches to the current state.')
-			self.__mergeBranches__(branches)
+			self.__mergeBranches__(branches, currentBranch)
 		elif syncType == 'dev':
 			print('Merging all development branches.')
 			branches = [branch for branch in branches if 'dev' in branch]
-			self.__mergeBranches__(branches, True)
+			self.__mergeBranches__(branches, currentBranch)
 		elif syncType == 'altdev':
 			branchName = 'dev' + datetime.datetime.now().strftime("%Y-%m-%d_%H.%M")
 			self.__shell__('git branch {}'.format(branchName))
@@ -210,7 +210,7 @@ class management:
 		self.__shell__('git checkout dev')
 		self.__executeModules__()
 
-	def __mergeBranches__(self, branches):
+	def __mergeBranches__(self, branches, currentBranch):
 			for branch in branches:
 				branch = branch.strip()
 				print('  Doing checkout and merge for branch {}'.format(branch))
