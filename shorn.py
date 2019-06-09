@@ -4,7 +4,7 @@ This program optimizes my personal workflow at
 developing software and is built on top of git.
 """
 
-import sys, os, subprocess, re
+import sys, os, subprocess, re, traceback
 
 class management:
 	def __init__(self):
@@ -45,6 +45,10 @@ class management:
 			"update":[
 				"update()",
 				'Looks on github if a new version is commited and updates the local binary.'
+			],
+			"install":[
+				"install()",
+				'Install one of the optional modules to your local environment.'
 			]
 		}
 
@@ -220,23 +224,57 @@ class management:
 	
 	def update(self):
 		print('Checking for update...')
+		self.__fetchRepo__()
+		with open('/tmp/shorn/shorn.py') as newBin:
+			for line in newBin.readlines():
+				try:
+					if 'self.version' in line:
+						if self.version < float(line[line.find('=')+1:].strip()):
+							print('Install new version...')
+							shornPath = self.__shell__('which shorn')
+							self.__shell__('sudo cp {} {}'.format('/tmp/shorn/shorn.py', shornPath))
+							self.__shell__('sudo chmod a+x {}'.format(shornPath))
+							whoami = self.__shell__('whoami')
+							self.__shell__('sudo chown {} {}'.format(whoami, shornPath))
+							print('Installed new binary!')
+						else:
+							print('The installed version is up to date!')
+						break
+				except:
+					print('Was unable to detect the current version.\nAre you sure self.version is implemented?')
+	
+	def install(self):
+		if not os.path.isdir('/usr/lib/shorn/'):
+			print('Creating module directory at /usr/lib/shorn.')
+			self.__shell__('sudo mkdir /usr/lib/shorn')
+		self.__fetchRepo__()
+
+		try:
+			newModule = sys.argv[2]
+		except:
+			print('Please specify a module you would like to install.\nUsage: shorn install <modulename>')
+			sys.exit(-1)
+		methods = os.listdir('/tmp/shorn/modules')
+		modules = [{method: os.listdir(os.path.join('/tmp/shorn/modules', method))} for method in methods]
+		print(modules)
+
+		# if module in dict, install
+		try:
+			for method in modules[newModule]:
+				self.__shell__('sudo cp {} /usr/lib/shorn/'.format(os.path.join('/tmp/shorn/modules', method)))
+		except:
+			print('Requested module not found.\nThe following are available: {}'.format(''.join(['\n {} '.format(module) for module in modules.keys()])))
+		
+	def __fetchRepo__(self):
 		if os.path.isdir('/tmp/shorn/'):
 			self.__shell__('rm -rf /tmp/shorn')
 		self.__shell__('git clone https://github.com/zoerbd/shorn', '/tmp')
-		with open('/tmp/shorn/shorn.py') as newBin:
-			for line in newBin.readlines():
-				if 'self.version' in line:
-					if self.version < float(line[line.find('=')+1:].strip()):
-						print('Install new version...')
-						shornPath = self.__shell__('which shorn')
-						self.__shell__('sudo cp {} {}'.format('/tmp/shorn/shorn.py', shornPath))
-						self.__shell__('sudo chmod a+x {}'.format(shornPath))
-						whoami = self.__shell__('whoami')
-						self.__shell__('sudo chown {} {}'.format(whoami, shornPath))
-						print('Installed new binary!')
-					else:
-						print('The installed version is up to date!')
-					break
+	
+	def __executeModules__(self):
+		parent = traceback.extract_stack(None, 2)[0][2]
+		for modulePath in os.listdir(os.path.join('/usr/lib/shorn'), parent):
+			with open(modulePath) as moduleContent:
+				[ eval(line) for line in moduleContent.readlines() ]
 
 if __name__ == '__main__':
 	# command to (build and) execute
@@ -244,7 +282,7 @@ if __name__ == '__main__':
 		management().parse(sys.argv[1:]) 
 	else:
 		try:
-			if sys.argv[1] not in ['version', 'init', 'help', 'update']:
+			if sys.argv[1] not in ['version', 'init', 'help', 'update', 'install']:
 				print('init: .shorn/exec.sh does not exist or is not accessible')
 		except IndexError:
 			sys.argv.append('help')
