@@ -100,11 +100,9 @@ class management:
 			self.__shell__('git commit -m \'{}\''.format(commitMessage))
 			return self.__shell__('echo $?')
 		except Exception as err:
-			print(err)
+			print('  commit: {}'.format(err))
 			if 'returned non-zero exit status 1.' in str(err):
 				print('commit: Nothing new to try or commit.')
-			else:
-				print('commit: Error occured: {}'.format(err))
 		self.__executeModules__()
 
 	def restore(self):
