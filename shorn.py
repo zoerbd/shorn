@@ -58,16 +58,19 @@ class management:
 		sys.exit()
 
 	def init(self):
+		print('Start initializing new repository.')
 		self.__shell__('git init')
 		if not os.path.isdir('.shorn'):
-			print('init: Creating .shorn directory for testing and executing.')
+			print('Creating .shorn directory for testing and executing.')
 			self.__shell__('mkdir .shorn') 	# put tools for building, testing in .shorn
 		self.__shell__('touch .shorn/exec.sh')
-		print('init: Created or recreated exec.sh.')
+		print('Created exec.sh.')
 		self.__shell__('chmod -R 770 .shorn')
 		self.commit()				# create master-branch by first commit
+		print('Adding dev branch.')
 		self.__shell__('git branch dev')
 		self.__shell__('git checkout dev')
+		print('Configuring merge tools.')
 		self.__shell__('git config merge.tool vimdiff')
 		self.__shell__('git config merge.conflictstyle diff3')
 		self.__shell__('git config mergetool.prompt false')
@@ -83,13 +86,14 @@ class management:
 				self.restore()
 
 	def commit(self):
+		print('Commiting all changes.')
 		self.__shell__('git add -A')
 		commitMessage = 'minor changes'
 		try:
 			if self.opt_arg:
 				commitMessage = self.opt_arg
 		except:
-			print('Using default commit-message')
+			print('Using default commit-message.')
 		try:
 			self.__shell__('git commit -m \'{}\''.format(commitMessage))
 			return self.__shell__('echo $?')
@@ -158,6 +162,7 @@ class management:
 	def pull(self):
 		self.commit()
 		current_branch = self.__getCurrentBranch__()
+		print('Pulling from origin.')
 		if current_branch != 'master':
 			self.__shell__('git pull origin {}'.format(current_branch))
 			self.commit()
@@ -167,6 +172,7 @@ class management:
 	def sync(self):
 		self.commit()
 		current_branch = self.__getCurrentBranch__()
+		print('Pushing to origin.')
 		self.__shell__('git push origin {}'.format(current_branch))
 		self.__shell__('git checkout master')
 		self.__shell__('git merge {}'.format(current_branch))
