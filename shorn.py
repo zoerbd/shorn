@@ -199,7 +199,20 @@ class management:
 			parameter = argv[0]
 		except:
 			self.help()
-		if parameter not in self.args: self.help()
+		if parameter not in self.args: 
+			# check if it's an additional module parameter
+			try:
+				additionalCommandsPath = '/usr/lib/shorn/new'
+				for filename in os.listdir(additionalCommandsPath):
+					filename = os.path.join(additionalCommandsPath, filename)
+					expectedMethodStr = 'def {}('.format(parameter)
+					with open(filename) as moduleContent:
+						for line in moduleContent.readlines():
+							if expectedMethodStr in line:
+								return self.__importAndExecuteModule__(filename, parameter)
+			except:
+				pass
+			self.help()
 		if len(argv) > 1: 
 			self.opt_arg = argv[1]
 		eval('self.' + self.args[parameter][0])
@@ -318,11 +331,17 @@ class management:
 		try:
 			for modulePath in os.listdir(os.path.join('/usr/lib/shorn', parent)):
 				modulePath = os.path.join('/usr/lib/shorn', parent, modulePath)
-				with open(modulePath) as moduleContent:
-					print('Will proceed executing the installed {} module.'.format(os.path.basename(modulePath)))
-					[ eval(line) for line in moduleContent.readlines() ]
+				self.__importAndExecuteModule__(modulePath)	
 		except:
 			pass
+
+	def __importAndExecuteModule__(modulePath, parameter=None):
+		with open(modulePath) as moduleContent:
+			print('Will proceed executing the installed {} module.'.format(os.path.basename(modulePath)))
+			[ eval(line) for line in moduleContent.readlines() ]
+		# execute imported function
+		if parameter:
+			eval('{}()'.format(parameter))
 
 if __name__ == '__main__':
 	# command to (build and) execute
