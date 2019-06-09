@@ -4,11 +4,11 @@ This program optimizes my personal workflow at
 developing software and is built on top of git.
 """
 
-import sys, os, subprocess, re, traceback, importlib.util
+import sys, os, subprocess, re, traceback, importlib.util, datetime
 
 class management:
 	def __init__(self):
-		self.version = 0.61
+		self.version = 0.68
 		self.args = {
 			"init" : [
 				"init()",
@@ -189,26 +189,33 @@ class management:
 				syncType = 'all'
 		self.commit()
 		currentBranch = self.__getCurrentBranch__()
+		branches = self.__shell__('git branch').strip().split('\n')
+		del branches[[i for i, val in enumerate(branches) if '*' in val][0]]	# delete branch marked with '*' (active branch)
 		if syncType == 'all':
 			print('Merging all branches to the current state.')
-			branches = self.__shell__('git branch').strip().split('\n')
-			del branches[[i for i, val in enumerate(branches) if '*' in val][0]]	# delete branch marked with '*' (active branch)
+			self.__mergeBranches__(branches)
+		elif syncType == 'dev':
+			print('Merging all development branches.')
+			branches = [branch for branch in branches if 'dev' in branch]
+			self.__mergeBranches__(branches, True)
+		elif syncType == 'altdev':
+			branchName = 'dev' + datetime.datetime.now().strftime("%Y-%m-%d.%H:%M")
+			self.__shell__('git branch {}'.format(branchName))
+			self.__shell__('git checkout {}'.format(branchName))
+		else:
+			print('Entered invalid sync method.\nUsage: shorn sync <all|dev|altdev>\n  all - commit and push all branches\n  dev - commit and push all dev branches\n  altdev - commit changes in dev branch and create forked dev branch')
+		print('Pushing all altered branches to origin.')
+		self.__shell__('git push --all origin')
+		print('Switched back to branch dev.')
+		self.__shell__('git checkout dev')
+		self.__executeModules__()
+
+	def __mergeBranches__(self, branches):
 			for branch in branches:
 				branch = branch.strip()
 				print('  Doing checkout and merge for branch {}'.format(branch))
 				self.__shell__('git checkout {}'.format(branch))
 				self.__shell__('git merge {}'.format(currentBranch))
-			print('Pushing all branches to origin.')
-			self.__shell__('git push --all origin')
-		elif syncType == 'dev':
-			pass
-		elif syncType == 'altdev':
-			pass
-		else:
-			print('Entered invalid sync method.\nUsage: shorn sync <all|dev|altdev>\n  all - commit and push all branches\n  dev - commit and push all dev branches\n  altdev - commit changes in dev branch and create forked dev branch')
-		print('Switched back to branch dev.')
-		self.__shell__('git checkout dev')
-		self.__executeModules__()
 
 	def __getCurrentBranch__(self):
 		return self.__shell__('git status').split('\n')[0].strip().split(' ')[-1]
