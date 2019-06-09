@@ -8,7 +8,7 @@ import sys, os, subprocess, re, traceback, importlib.util, datetime
 
 class management:
 	def __init__(self):
-		self.version = 1.0
+		self.version = 1.1
 		self.args = {
 			"init" : [
 				"init()",
@@ -164,14 +164,17 @@ class management:
 
 	def pull(self):
 		self.commit()
-		#currentBranch = self.__getCurrentBranch__()
 		print('Pulling from origin.')
-		self.__shell__('git pull --all')
-		#if currentBranch != 'master':
-		#	self.__shell__('git pull origin {}'.format(currentBranch))
-		#	self.commit()
-		#self.__shell__('git pull origin master')
-		#self.commit()
+		self.__shell__('git checkout master')
+		branches = self.__shell__('git branch').strip().split('\n')
+		del branches[[i for i, val in enumerate(branches) if '*' in val][0]]	# delete branch marked with '*' (active branch)
+		for branch in branches:
+			self.__shell__('git pull origin {}'.format(branch))
+			self.commit()
+		self.__shell__('git pull origin master')
+		self.commit()
+		print('Switching to branch dev.')
+		self.__shell__('git checkout dev')
 		self.__executeModules__()
 	
 	def sync(self):
@@ -211,11 +214,11 @@ class management:
 		self.__executeModules__()
 
 	def __mergeBranches__(self, branches, currentBranch):
-			for branch in branches:
-				branch = branch.strip()
-				print('  Doing checkout and merge for branch {}'.format(branch))
-				self.__shell__('git checkout {}'.format(branch))
-				self.__shell__('git merge {}'.format(currentBranch))
+		for branch in branches:
+			branch = branch.strip()
+			print('  Doing checkout and merge for branch {}'.format(branch))
+			self.__shell__('git checkout {}'.format(branch))
+			self.__shell__('git merge {}'.format(currentBranch))
 
 	def __getCurrentBranch__(self):
 		return self.__shell__('git status').split('\n')[0].strip().split(' ')[-1]
