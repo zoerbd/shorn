@@ -8,7 +8,7 @@ import sys, os, subprocess, re, traceback, importlib.util, datetime
 
 class management:
 	def __init__(self):
-		self.version = 0.68
+		self.version = 0.69
 		self.args = {
 			"init" : [
 				"init()",
@@ -199,7 +199,7 @@ class management:
 			branches = [branch for branch in branches if 'dev' in branch]
 			self.__mergeBranches__(branches, True)
 		elif syncType == 'altdev':
-			branchName = 'dev' + datetime.datetime.now().strftime("%Y-%m-%d.%H:%M")
+			branchName = 'dev' + datetime.datetime.now().strftime("%Y-%m-%d_%H.%M")
 			self.__shell__('git branch {}'.format(branchName))
 			self.__shell__('git checkout {}'.format(branchName))
 		else:
