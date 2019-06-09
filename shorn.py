@@ -4,7 +4,7 @@ This program optimizes my personal workflow at
 developing software and is built on top of git.
 """
 
-import sys, os, subprocess, re, traceback
+import sys, os, subprocess, re, traceback, importlib.util
 
 class management:
 	def __init__(self):
@@ -335,13 +335,16 @@ class management:
 		except:
 			pass
 
-	def __importAndExecuteModule__(modulePath, parameter=None):
+	def __importAndExecuteModule__(self, modulePath, parameter=None):
+		# execute imported function
+		if parameter:
+			executable = os.path.basename(modulePath)
+			sys.path.append(modulePath.replace(executable, ''))
+			i = importlib.import_module(executable.replace('.py', ''))
+			return eval('i.{}()'.format(parameter))
 		with open(modulePath) as moduleContent:
 			print('Will proceed executing the installed {} module.'.format(os.path.basename(modulePath)))
 			[ eval(line) for line in moduleContent.readlines() ]
-		# execute imported function
-		if parameter:
-			eval('{}()'.format(parameter))
 
 if __name__ == '__main__':
 	# command to (build and) execute
