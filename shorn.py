@@ -8,7 +8,7 @@ import sys, os, subprocess, re, traceback, importlib.util
 
 class management:
 	def __init__(self):
-		self.version = 0.52
+		self.version = 0.6
 		self.args = {
 			"init" : [
 				"init()",
