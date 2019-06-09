@@ -8,7 +8,7 @@ import sys, os, subprocess, re, traceback, importlib.util, datetime
 
 class management:
 	def __init__(self):
-		self.version = 0.7
+		self.version = 1.0
 		self.args = {
 			"init" : [
 				"init()",
@@ -38,18 +38,19 @@ class management:
 				"pull()",
 				'Pulls and commits all changes from origin.'
 			],
-			"version":[
-				"printVersion()",
-				'Prints the currently installed version of shorn.'
-			],
 			"update":[
 				"update()",
-				'Looks on github if a new version is commited and updates the local binary.'
+				'Checks if a new version is available on github and updates the local binary.'
 			],
 			"install":[
 				"install()",
-				'Install one of the optional modules to your local environment.'
+				'Installs one of the optional modules to your local environment.'
+			],
+			"version":[
+				"printVersion()",
+				'Prints the currently installed version of shorn.'
 			]
+
 		}
 
 	def help(self):
