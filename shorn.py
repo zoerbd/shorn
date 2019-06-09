@@ -96,13 +96,13 @@ class management:
 				commitMessage = self.opt_arg
 		except:
 			print('Using default commit-message.')
-		try:
-			self.__shell__('git commit -m \'{}\''.format(commitMessage))
-			return self.__shell__('echo $?')
-		except Exception as err:
-			print('  commit: {}'.format(err))
-			if 'returned non-zero exit status 1.' in str(err):
-				print('commit: Nothing new to try or commit.')
+		#try:
+		self.__shell__('git commit -m \'{}\''.format(commitMessage))
+		return self.__shell__('echo $?')
+		#except Exception as err:
+		#	print('  commit: {}'.format(err))
+		#	if 'returned non-zero exit status 1.' in str(err):
+		#		print('commit: Nothing new to try or commit.')
 		self.__executeModules__()
 
 	def restore(self):
@@ -257,7 +257,9 @@ class management:
 		splittedCmd = cmd.split(' ')
 		# make sure that commit messages are executed correctly (format message into one place in list, not white-space seperated)
 		if cmd.find('\'') != -1:
-			quotes = [n for n, val in enumerate(cmd.split(' ')) if val.find('\'') != -1]
+			quotes = [n for n, val in enumerate(cmd.split(' ')) if '\'' in val]
+			if len(quotes) == 1:
+				quotes.append(quotes[0]) 	# fixes the problem that there is only one number when bothe quotes are in the same place of the cmd.split(' ') list
 			newMsg = ' '.join(splittedCmd[quotes[0] : quotes[1] + 1])
 			del splittedCmd[quotes[0] : quotes[1] + 1]
 			splittedCmd.insert(quotes[0], newMsg)
