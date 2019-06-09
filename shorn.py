@@ -165,10 +165,10 @@ class management:
 
 	def pull(self):
 		self.commit()
-		current_branch = self.__getCurrentBranch__()
+		currentBranch = self.__getCurrentBranch__()
 		print('Pulling from origin.')
-		if current_branch != 'master':
-			self.__shell__('git pull origin {}'.format(current_branch))
+		if currentBranch != 'master':
+			self.__shell__('git pull origin {}'.format(currentBranch))
 			self.commit()
 		self.__shell__('git pull origin master')
 		self.commit()
@@ -176,15 +176,23 @@ class management:
 	
 	def sync(self):
 		self.commit()
-		current_branch = self.__getCurrentBranch__()
-		print('Pushing to origin.')
-		self.__shell__('git push origin {}'.format(current_branch))
-		self.__shell__('git checkout master')
-		print('Merging branches.')
-		self.__shell__('git merge {}'.format(current_branch))
-		self.commit()
-		self.__shell__('git push origin master'.format(current_branch))
-		self.__shell__('git checkout {}'.format(current_branch))
+		currentBranch = self.__getCurrentBranch__()
+		if sys.argv[2] == 'all' or sys.argv[2] == '':
+			print('Merging all branches to the current state.')
+			branches = self.__shell__('git branch').strip().split('\n')
+			del branches[[i for i, val in enumerate(branches) if '*' in val][0]]	# delete branch marked with '*' (active branch)
+			for branch in branches:
+				self.__shell__('git checkout {}'.format(branch))
+				self.__shell__('git merge {}'.format(currentBranch))
+			print('Pushing all branches to origin.')
+			self.__shell__('git push --all origin')
+		elif sys.argv[2] == 'dev':
+			pass
+		elif sys.argv[2] == 'altdev':
+			pass
+		else:
+			print('Entered invalid sync method.\nUsage: shorn sync <all|dev|altdev>\n  all - commit and push all branches\n  dev - commit and push all dev branches\n  altdev - commit changes in dev branch and create forked dev branch')
+		self.__shell__('git checkout dev')
 		self.__executeModules__()
 
 	def __getCurrentBranch__(self):
@@ -335,7 +343,7 @@ class management:
 		except:
 			pass
 
-	def __importAndExecuteModule__(self, modulePath, parameter=None):
+	def __importAndExecuteModule__(self, modulePath, parameter=None): #='main'):
 		# execute imported function
 		if parameter:
 			executable = os.path.basename(modulePath)
