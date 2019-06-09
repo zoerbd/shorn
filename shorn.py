@@ -209,19 +209,30 @@ class management:
 			splittedCmd.insert(quotes[0], newMsg)
 		ps = subprocess.Popen(splittedCmd, **opts)
 		stdout, stderr = ps.communicate()
-		if stderr and not any([
-			b'Cloning into \'shorn\'...' in stderr, 
-			b'Everything up-to-date' in stderr,
-			b'Already on' in stderr
-		]):
-			err = stderr.decode('utf-8').strip()
-			print('Error occurred in __shell__:\n $ {}\n{}'.format(
-				''.join(cmd), 
-				''.join([' >> {}\n'.format(line) for line in err.split('\n')])
-				).strip()
-			)
+		if stderr:
+			err = manageGitErr(stderr)
+			if err:
+				print('Error occurred in __shell__:\n $ {}\n{}'.format(
+					''.join(cmd), 
+					''.join([' >> {}\n'.format(line) for line in err.split('\n')])
+					).strip()
+				)
 			return err
 		return stdout.decode('utf-8').strip()
+
+	def manageGitErr(self, err):
+		'''
+		Returns empty string if allowed git error message
+		else returns the utf-8 and stripped error.
+		'''
+		allowedGitErrors = [
+			b'Cloning into \'shorn\'...', 
+			b'Everything up-to-date',
+			b'Already on'
+		]
+		if not any(allowedGitErr in err for allowedGitErr in allowedGitErrors):
+			return err.decode('utf-8').strip()
+		return ''
 
 	def printVersion(self):
 		print(self.version)
