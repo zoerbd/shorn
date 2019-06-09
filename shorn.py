@@ -8,7 +8,7 @@ import sys, os, subprocess, re, traceback
 
 class management:
 	def __init__(self):
-		self.version = 0.5
+		self.version = 0.52
 		self.args = {
 			"init" : [
 				"init()",
@@ -278,15 +278,28 @@ class management:
 			print('Please specify a module you would like to install.\nUsage: shorn install <modulename>')
 			sys.exit(-1)
 		methods = os.listdir('/tmp/shorn/modules')
-		modules = [{method: os.listdir(os.path.join('/tmp/shorn/modules', method))} for method in methods]
-		print(modules)
+		supportedMethods = []
+		for method in methods:
+			availableModules = os.listdir(os.path.join('/tmp/shorn/modules', method))
+			if newModule + '.py' in availableModules:
+				supportedMethods.append(method)
 
-		# if module in dict, install
-		try:
-			for method in modules[newModule]:
-				self.__shell__('sudo cp {} /usr/lib/shorn/'.format(os.path.join('/tmp/shorn/modules', method)))
-		except:
-			print('Requested module not found.\nThe following are available: {}'.format(''.join(['\n {} '.format(module) for module in modules.keys()])))
+		# Available methods for modules in supportedMethods, if empty -> module not found
+		if supportedMethods:
+			for method in supportedMethods:
+				print('Installing module...')
+				self.__shell__('sudo mkdir -p {}'.format(os.path.join('/usr/lib/shorn', method)))
+				self.__shell__('sudo cp {} /usr/lib/shorn/{}'.format(os.path.join('/tmp/shorn/modules', method, newModule + '.py'), method))
+			return
+		# pray to god that you don't have to tshoot this
+		print('Requested module not found.\nThe following are available: {}'.format(
+			''.join(['\n {} '.format(module) 
+				for module in [entry.replace('.py', '') 
+				for entry in list(set(sum(
+					[os.listdir(filename) for filename in [os.path.join('/tmp/shorn/modules', method) for method in methods]], []
+				)
+				))]
+			])))
 		
 	def __fetchRepo__(self):
 		if os.path.isdir('/tmp/shorn/'):
@@ -296,7 +309,9 @@ class management:
 	def __executeModules__(self):
 		parent = traceback.extract_stack(None, 2)[0][2]
 		for modulePath in os.listdir(os.path.join('/usr/lib/shorn'), parent):
+			modulePath = os.path.join('/usr/lib/shorn', parent, modulePath)
 			with open(modulePath) as moduleContent:
+				print('Will proceed executing the installed {} module.'.format(os.path.basename(modulePath)))
 				[ eval(line) for line in moduleContent.readlines() ]
 
 if __name__ == '__main__':
