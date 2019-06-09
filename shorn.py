@@ -84,6 +84,7 @@ class management:
 				[self.__shell__('./.shorn/' + subtool) for subtool in shorn_lst]
 			if self.__ask__('Restore commit?'):
 				self.restore()
+		self.__executeModules__()
 
 	def commit(self):
 		print('Commiting all changes.')
@@ -253,7 +254,7 @@ class management:
 				try:
 					if 'self.version' in line:
 						if self.version < float(line[line.find('=')+1:].strip()):
-							print('Install new version...')
+							print('Installing new version...')
 							shornPath = self.__shell__('which shorn')
 							self.__shell__('sudo cp {} {}'.format('/tmp/shorn/shorn.py', shornPath))
 							self.__shell__('sudo chmod a+x {}'.format(shornPath))
@@ -295,11 +296,12 @@ class management:
 		print('Requested module not found.\nThe following are available: {}'.format(
 			''.join(['\n {} '.format(module) 
 				for module in [entry.replace('.py', '') 
-				for entry in list(set(sum(
-					[os.listdir(filename) for filename in [os.path.join('/tmp/shorn/modules', method) for method in methods]], []
-				)
-				))]
-			])))
+					for entry in list(set(sum(
+						[ os.listdir(filename) for filename in [ os.path.join('/tmp/shorn/modules', method) for method in methods ] ], []
+					)))
+				]
+			])
+		))
 		
 	def __fetchRepo__(self):
 		if os.path.isdir('/tmp/shorn/'):
