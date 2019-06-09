@@ -194,8 +194,9 @@ class management:
 			branches = self.__shell__('git branch').strip().split('\n')
 			del branches[[i for i, val in enumerate(branches) if '*' in val][0]]	# delete branch marked with '*' (active branch)
 			for branch in branches:
+				branch = branch.strip()
 				print('  Doing checkout and merge for branch {}'.format(branch))
-				self.__shell__('git checkout {}'.format(branch.strip()))
+				self.__shell__('git checkout {}'.format(branch))
 				self.__shell__('git merge {}'.format(currentBranch))
 			print('Pushing all branches to origin.')
 			self.__shell__('git push --all origin')
