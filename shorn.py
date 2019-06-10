@@ -8,7 +8,7 @@ import sys, os, subprocess, re, traceback, importlib.util, datetime
 
 class management:
 	def __init__(self):
-		self.version = 1.11
+		self.version = 1.12
 		self.args = {
 			"init" : [
 				"init()",
@@ -291,8 +291,8 @@ class management:
 			b'Everything up-to-date',
 			b'Already on',
 			b'To https://github.com/zoerbd/shorn',
-			b'Switched to branch',
-			b'From https://github.com/zoerbd/shorn',
+			b'Switched to',
+			b'From https://',
 		]
 		if not any(allowedGitErr in err for allowedGitErr in allowedGitErrors):
 			return err.decode('utf-8').strip()
