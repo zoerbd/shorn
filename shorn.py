@@ -8,7 +8,7 @@ import sys, os, subprocess, re, traceback, importlib.util, datetime
 
 class management:
 	def __init__(self):
-		self.version = 1.13
+		self.version = 1.14
 		self.args = {
 			"init" : [
 				"init()",
@@ -211,6 +211,7 @@ class management:
 		self.__shell__('git push --all origin')
 		print('Switched back to branch dev.')
 		self.__shell__('git checkout dev')
+		self.__shell__('git merge master')
 		self.__executeModules__()
 
 	def __mergeBranches__(self, branches, currentBranch):
