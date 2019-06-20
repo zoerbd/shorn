@@ -8,7 +8,7 @@ import sys, os, subprocess, re, traceback, importlib.util, datetime
 
 class management:
 	def __init__(self):
-		self.version = 1.12
+		self.version = 1.13
 		self.args = {
 			"init" : [
 				"init()",
@@ -290,7 +290,7 @@ class management:
 			b'Cloning into \'shorn\'...', 
 			b'Everything up-to-date',
 			b'Already on',
-			b'To https://github.com/zoerbd/shorn',
+			b'To https://',
 			b'Switched to',
 			b'From https://',
 		]
