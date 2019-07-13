@@ -12,4 +12,6 @@ My personal tool for managing efficient workflows for projects in terms of devel
 	shorn install <modulename>
 
 # Available modules
-coming soon!
+	django
+	blog
+	dreamsword
