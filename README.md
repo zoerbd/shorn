@@ -13,5 +13,3 @@ My personal tool for managing efficient workflows for projects in terms of devel
 
 # Available modules
 	django
-	blog
-	dreamsword
